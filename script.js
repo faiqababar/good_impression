@@ -1,67 +1,113 @@
+let player = document.getElementById("player");
+let playerX = 280,
+  playerY = 180;
+let speed = 5;
+let carryingItem = null;
 let score = 0;
-let timeLeft = 60; // 60 seconds countdown
+let timeLeft = 60;
 
-const timerElement = document.getElementById("time");
-const scoreElement = document.getElementById("scoreValue");
-const finalScoreElement = document.getElementById("finalScore");
-const resultScreen = document.getElementById("result");
+const items = document.querySelectorAll(".item");
+const timerEl = document.getElementById("time");
+const scoreEl = document.getElementById("score");
+const heldItemEl = document.getElementById("heldItem");
+const gameOverScreen = document.getElementById("game-over");
+const finalScoreEl = document.getElementById("finalScore");
 
-// Timer countdown
-const timer = setInterval(() => {
-    timeLeft--;
-    timerElement.textContent = timeLeft;
-    if (timeLeft <= 0) {
-        clearInterval(timer);
-        endGame();
-    }
-}, 1000);
+const pickupSound = document.getElementById("pickupSound");
+const dropSound = document.getElementById("dropSound");
 
-// Drag and Drop logic
-const draggables = document.querySelectorAll('.draggable');
-const dropzones = document.querySelectorAll('.dropzone');
-
-draggables.forEach(item => {
-    item.setAttribute('draggable', true);
-
-    item.addEventListener('dragstart', (e) => {
-        e.dataTransfer.setData('text/plain', item.id);
-    });
-});
-
-dropzones.forEach(zone => {
-    zone.addEventListener('dragover', (e) => e.preventDefault());
-
-    zone.addEventListener('drop', (e) => {
-        e.preventDefault();
-        const itemId = e.dataTransfer.getData('text/plain');
-        const item = document.getElementById(itemId);
-        const itemType = item.getAttribute('data-type');
-
-        if (isCorrectPlacement(itemType, zone.id)) {
-            zone.appendChild(item);
-            score += 10;
-        } else {
-            score -= 5;
-            alert('Wrong place! -5 points');
-        }
-
-        scoreElement.textContent = score;
-    });
-});
-
-function isCorrectPlacement(type, zoneId) {
-    const validPlacements = {
-        trash: ["trashBin"],
-        book: ["shelf"],
-        clothes: ["shelf"],
-    };
-    return validPlacements[type]?.includes(zoneId);
+function movePlayer(dx, dy) {
+  playerX = Math.max(0, Math.min(560, playerX + dx * speed));
+  playerY = Math.max(0, Math.min(360, playerY + dy * speed));
+  player.style.left = playerX + "px";
+  player.style.top = playerY + "px";
 }
 
+function checkPickupOrDrop() {
+  if (carryingItem) {
+    const dropzone = getCollidingDropzone();
+    if (dropzone) {
+      if (isCorrectPlacement(carryingItem, dropzone.id)) {
+        score += 10;
+        carryingItem.remove();
+        dropSound.play();
+      } else {
+        score -= 5;
+        alert("Oops! Wrong place. -5 points");
+      }
+      carryingItem = null;
+      updateInventory();
+      scoreEl.textContent = score;
+    }
+  } else {
+    const item = getCollidingItem();
+    if (item) {
+      carryingItem = item;
+      item.style.display = "none";
+      pickupSound.play();
+      updateInventory(item);
+    }
+  }
+}
+
+function updateInventory(item = null) {
+  heldItemEl.textContent = item ? item.dataset.type : "None";
+}
+
+function getCollidingItem() {
+  return Array.from(items).find(
+    (item) => isColliding(player, item) && !item.removed
+  );
+}
+
+function getCollidingDropzone() {
+  return Array.from(document.querySelectorAll(".dropzone")).find((zone) =>
+    isColliding(player, zone)
+  );
+}
+
+function isCorrectPlacement(item, zoneId) {
+  const correctZones = {
+    trash: ["trashBin"],
+    book: ["shelf"],
+    clothes: ["shelf"],
+  };
+  return correctZones[item.dataset.type]?.includes(zoneId);
+}
+
+function isColliding(a, b) {
+  const aRect = a.getBoundingClientRect();
+  const bRect = b.getBoundingClientRect();
+  return !(
+    aRect.right < bRect.left ||
+    aRect.left > bRect.right ||
+    aRect.bottom < bRect.top ||
+    aRect.top > bRect.bottom
+  );
+}
+
+document.addEventListener("keydown", (e) => {
+  const keyMoves = {
+    ArrowUp: [0, -2],
+    ArrowDown: [0, 2],
+    ArrowLeft: [-2, 0],
+    ArrowRight: [2, 0],
+  };
+  if (keyMoves[e.key]) movePlayer(...keyMoves[e.key]);
+  if (e.key === " ") checkPickupOrDrop();
+});
+
+const timer = setInterval(() => {
+  timerEl.textContent = --timeLeft;
+  if (timeLeft <= 0) endGame();
+}, 1000);
+
 function endGame() {
-    document.getElementById('apartment').style.display = 'none';
-    document.getElementById('timer').style.display = 'none';
-    document.getElementById('score').style.display = 'none';
-    resultScreen.classList.remove('hidden');
-    finalScoreElement.textContent = score;
+  clearInterval(timer);
+  gameOverScreen.style.display = "block";
+  finalScoreEl.textContent = score;
+}
+
+function restartGame() {
+  location.reload();
 }
