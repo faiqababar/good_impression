@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Good Impression - Clean the Apartment</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+    <div id="game">
+        <h1>Good Impression</h1>
+        <div id="timer">Time Left: <span id="time">60</span> sec</div>
+        <div id="score">Score: <span id="scoreValue">0</span></div>
+
+        <div id="apartment">
+            <div id="trashBin" class="dropzone">Trash Bin</div>
+            <div id="shelf" class="dropzone">Shelf</div>
+
+            <div class="draggable" id="pizzaBox" data-type="trash">🍕 Pizza Box</div>
+            <div class="draggable" id="book" data-type="book">📚 Book</div>
+            <div class="draggable" id="shirt" data-type="clothes">👕 Shirt</div>
+            <div class="draggable" id="bottle" data-type="trash">🧴 Bottle</div>
+        </div>
+
+        <div id="result" class="hidden">
+            <h2>Guests have arrived!</h2>
+            <p>Your final score: <span id="finalScore"></span></p>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
